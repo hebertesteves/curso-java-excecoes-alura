@@ -1,6 +1,7 @@
 package adopet.api.service;
 
 import adopet.api.dto.*;
+import adopet.api.exception.AdocaoException;
 import adopet.api.model.Adocao;
 import adopet.api.model.Pet;
 import adopet.api.model.StatusAdocao;
@@ -8,7 +9,6 @@ import adopet.api.model.Tutor;
 import adopet.api.repository.AdocaoRepository;
 import adopet.api.repository.PetRepository;
 import adopet.api.repository.TutorRepository;
-import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -41,19 +41,19 @@ public class AdocaoService {
 
         // Pet ja adotado
         if (pet.getAdotado()) {
-            throw new IllegalStateException("Pet já adotado");
+            throw new AdocaoException("Pet já adotado");
         }
 
         // Pet com solitação de adocao em andamento
         Boolean petAdocaoEmAndamento = adocaoRepository.existsByPetIdAndStatus(dto.idPet(), StatusAdocao.AGUARDANDO_AVALIACAO);
         if (petAdocaoEmAndamento) {
-            throw new UnsupportedOperationException("Pet com aadoção em andamento");
+            throw new AdocaoException("Pet com adoção em andamento");
         }
 
         // Tutor com 2 adoções aprovadas
         Integer tutorAdocoes = adocaoRepository.countByTutorIdAndStatus(dto.idTutor(), StatusAdocao.APROVADO);
         if (tutorAdocoes == 2) {
-            throw new IllegalStateException("Tutor com máximo de adoções");
+            throw new AdocaoException("Tutor com máximo de adoções");
         }
 
         adocaoRepository.save(new Adocao(tutor,pet, dto.motivo()));
